@@ -17,9 +17,10 @@ def start():
 def contents(file):
 	return midi.read_midifile(file)
 
-def convert_midi(file, spectrum):
+def convert_midi(file, low=24, high=102):
 	states, time = [], 0
 	test = True
+	spectrum = high - low
 
 	data = contents(file)
 	p = [0 for note in data]
@@ -72,14 +73,45 @@ def convert_midi(file, spectrum):
 	ohe = np.array([1 if new[i][j].any() else 0 for i in range(len(new)) for j in range(len(new[i]))]).reshape((new.shape[0], new.shape[1]))				 
 	return ohe
 
+def sample_midi(states, low=24, high=102, filename='new_music'):
+	scale, last_update = 55, 0
+	data = midi.Pattern()
+	current = midi.Track()
+	data.append(current)
+
+	spectrum = high - low
+
+	states = np.array(states)
+	previous = [0 for i in range(spectrum)]
+	for t, state in enumerate(states + [previous[:]]):
+		off, on = [], []
+		for i in range(spectrum):
+			n = state[i]
+			p = previous[i]
+			if (p == 1):
+				if (n == 0):	 
+					off.append(i)
+			elif (n == 1):
+				on.append(i)
+		for note in off:
+			current.append(midi.NoteOffEvent(tick=(t-last_update) * scale, pitch=note+low))	
+			last_update = t
+		for note in on:
+			current.append(midi.NoteOnEvent(tick=(t-last_update)*scale, velocity=40, pitch=note+low))
+
+		previous = state
+		end = midi.EndOfTrackEvent(tick=1)
+		current.append(end)
+		midi.write_midifile('{}.mid'.format(filename), data)
+
+
 def main():
 	file = 'data/Taylor Swift - Shake It Off.mid'
 	low = 24
 	high = 102
-	spectrum = high - low
 
-	ohe = convert_midi(file, spectrum=spectrum)
-	print (ohe)
+	ohe = convert_midi(file, low, high)
+	sample_midi(ohe, low, high, 'new_music')
 
 if __name__ == '__main__':
 	main()
