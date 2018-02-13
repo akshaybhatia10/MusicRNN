@@ -10,7 +10,7 @@ import sys
 from utils.extractFeatures import get_songs
 from utils.modelHelper import logger, generate_batches
 from utils.preprocessMidi import sample_midi, convert_midi
-from model import *
+from model import model_placeholders, model_parameters, rnn_layer, get_loss, get_optimizer, get_accuracy
 
 from distutils.version import LooseVersion
 import warnings
@@ -25,6 +25,7 @@ if not tf.test.gpu_device_name():
 else:
     print('Your GPU Device: {}'.format(tf.test.gpu_device_name()))
 
+
 def main():
 	if len(sys.argv) != 2:
 		print ("Usage: {0} <data directory> <min_len>".format(sys.argv[0]))
@@ -33,6 +34,13 @@ def main():
 	path = sys.argv[1]
 
 	#all_songs = get_songs(path)
+	model_inputs, model_targets, keep_prob, lr = model_placeholders(input_size, output_size)
+	parameters = model_parameters(hidden_size, output_size)  #w1, b1
+	final_outputs, prediction = rnn_layer(model_inputs, parameters, rnn_units, keep_prob)
+	loss = get_loss(final_outputs, model_targets)
+	optimizer = get_optimizer(loss, lr)
+	acc = get_accuracy(model_targets, prediction)
+
 
 if __name__ == '__main__':
 	main()
