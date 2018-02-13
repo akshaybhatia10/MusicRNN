@@ -1,6 +1,6 @@
 import glob
 import numpy as np
-from preprocessMidi import convert_midi
+from utils.preprocessMidi import convert_midi
 
 def convert_onehot(file):
 	new = np.zeros(file.shape)
@@ -20,11 +20,4 @@ def get_songs(dir, min_len=128):
 		if len(new) > min_len:
 			all_songs.append(new)
 
-	return all_songs		
-
-def main():
-	dir = 'data/Taylor Swift - Shake It Off.mid'
-	print (get_songs(dir))
-
-if __name__ == '__main__':
-	main()	
+	return all_songs
